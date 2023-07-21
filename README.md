@@ -2,10 +2,16 @@
 <p align="center" width="100%">
 <a href="" target="_blank">
 
-# FLASK: FINE-GRAINED LANGUAGE MODEL EVALUATION <br>BASED ON ALIGNMENT SKILL SETS
+# FLASK: Fine-grained Language Model Evaluation Based on Alignment Skill Sets
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+This is the official github repository for [FLASK: Fine-grained Language Model Evaluation Based on Alignment Skill Sets](https://arxiv.org/abs/2307.10928).
+
+<p align="center">
+  <img src="assets/overall_fig.png" width="80%" height="80%">
+</p>
 
 
 ## News
@@ -13,7 +19,7 @@
 
 
 ## Overview
-This is the repository for the KAIST FLASK project, a task-agnostic evaluation protocol of language model with fine-grained instance-wise skill set as metrics.
+This is the repository for the FLASK project, a task-agnostic evaluation protocol of language model with fine-grained instance-wise skill set as metrics.
 
 ## Evaluation
 TBA
@@ -34,12 +40,12 @@ We release the evaluation code of the FLASK. We also plan to release the pip ver
 Please cite if you use the data or code in this repo.
 
 ```
-@misc{flask2023,
-title = {FLASK: Fine-grained Language Skillset \\ Evaluation for Alignment of \\Foundation Models},
-url = {https://lklab.kaist.ac.kr/},
-author = {Ye, Seonghyeon$^*$ and Kim, Doyoung$^*$ and Kim, Sungdong and Hwang, Hyeonbin and Kim, Seungone and Jo, Yongrae and Thorne, James and Kim, Juho and Seo, Minjoon},
-month = {July},
-year = {2023},
-note = {$^*$ indicates equal contribution}
+@misc{ye2023flask,
+      title={FLASK: Fine-grained Language Model Evaluation based on Alignment Skill Sets}, 
+      author={Seonghyeon Ye and Doyoung Kim and Sungdong Kim and Hyeonbin Hwang and Seungone Kim and Yongrae Jo and James Thorne and Juho Kim and Minjoon Seo},
+      year={2023},
+      eprint={2307.10928},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
 }
 ```
