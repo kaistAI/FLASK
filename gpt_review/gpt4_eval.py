@@ -64,7 +64,6 @@ def gen_prompt(reviewer_jsons, prompt_jsons, skills_jsons, response, item):
                 skills+=f"\nScore 5: {scoring['5']}\n\n"
                 break
     prompt = prompt_template.format(question=item["text"], response=response, skills=skills, num=3, sample_answer=item["answer"], **defaults)
-    print("@@@",prompt)
     return sys_prompt, prompt
 
 
@@ -83,13 +82,13 @@ def get_json_list(file_path):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='ChatGPT-based QA evaluation.')
+    parser = argparse.ArgumentParser()
     parser.add_argument('-k', '--key-file', default='../openai_info/api_info.json')
     parser.add_argument('-q', '--question-file', default='../evaluation_set/flask_evaluation.jsonl')
-    parser.add_argument('-s', '--skillset-file', default='../skillset_label/src/skillset.json')
+    parser.add_argument('-s', '--skillset-file', default='../metadata_annotation/skillset/src/skillset_description.json')
     parser.add_argument('-a', '--answer-file', default='../model_output/outputs/chatgpt.jsonl')
-    parser.add_argument('-p', '--prompt-file', default='src/ver3/prompt.jsonl')
-    parser.add_argument('-r', '--reviewer-file', default='src/ver3/reviewer.jsonl')
+    parser.add_argument('-p', '--prompt-file', default='src/prompt.jsonl')
+    parser.add_argument('-r', '--reviewer-file', default='src/reviewer.jsonl')
     parser.add_argument('-o', '--output-review-file', default='outputs/chatgpt_review.jsonl')
     parser.add_argument('-e', '--output-error-file', default='outputs/chatgpt_review_error.jsonl')
     parser.add_argument('--max-tokens', type=int, default=1024, help='maximum number of tokens produced in the output')
@@ -111,6 +110,8 @@ if __name__ == '__main__':
 
     requests = []
     for i in question_idx_list:
+        if i>2:
+            continue
         for row in answer_jsons:
             if row.get('question_id') == question_jsons[i]['question_id']:
                 answer_elem = row
@@ -119,6 +120,7 @@ if __name__ == '__main__':
         assert answer_copy[i]['question_id'] == question_jsons[i]['question_id']
         question_copy.append(question_jsons[i])
         sys_prompt, prompt = gen_prompt(reviewer_jsons, prompt_jsons, skills_jsons,answer_copy[i]["text"], question_jsons[i])
+        print(prompt)
         review_id = shortuuid.uuid()
         review_jsons.append({
             'review_id': review_id,
@@ -156,6 +158,12 @@ if __name__ == '__main__':
     total_tokens = [response['response']['usage']['total_tokens'] for response in responses]
     print("total_token:", sum(total_tokens))
 
+    output_directory = os.path.dirname(args.output_error_file)
+
+    # Check if the directory exists, if not, create it
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
     delete_index = []
     if len(fails)>0:
         with open(f'{args.output_error_file}', 'w') as output_error_file:
@@ -171,16 +179,9 @@ if __name__ == '__main__':
                 print("@@@", delete_index)
                 delete_index=[]
     
-    print("$$$", delete_index)
     question_copy = [item for index, item in enumerate(question_copy) if index not in delete_index]
 
-
-    output_review_directory = os.path.dirname(args.output_review_file)
-
-    if not os.path.exists(output_review_directory):
-        os.makedirs(output_review_directory)
-
-    with open(f'{args.output_review_file}', 'w') as output_review_file:
+    with open(f'{args.output_review_file}', 'a') as output_review_file:
         for idx, review in enumerate(reviews):
             num = 3
             scores = parse_score(review, num)
@@ -196,3 +197,18 @@ if __name__ == '__main__':
             except Exception as e:
                 output_review_file.write('\n')
                 print(review_jsons[idx]['question_id'])
+        output_review_file.close()
+
+    with open(f'{args.output_review_file}', 'r') as output_read_file:
+        lines = output_read_file.readlines()
+        output_read_file.close()
+    json_objects = [json.loads(line) for line in lines]
+    sorted_objects = sorted(json_objects, key=lambda obj: obj.get('question_id'))
+
+    with open(f'{args.output_review_file}', 'w') as output_write_file:
+        for obj in sorted_objects:
+            try: 
+                output_write_file.write(json.dumps(obj) + '\n')
+            except Exception as e:
+                output_write_file.write('\n')
+                print(obj['question_id'])

@@ -3,6 +3,7 @@ import copy
 import csv
 from collections import OrderedDict
 import argparse
+import os
 
 total_score = {}
 max_score = {}
@@ -77,9 +78,17 @@ key_order = ["robustness", "correctness", "efficiency", "factuality", "commonsen
 ordered_dict = OrderedDict((key, difficulty_dict[key]) for key in key_order if key in difficulty_dict)
 
 file_name = file.split('/')[1].split('.jsonl')[0]
-with open("outputs/stats/"+file_name+".csv", "w") as f1: 
+
+file_directory = 'outputs/stats/'
+output_directory = os.path.dirname(file_directory)
+
+# Check if the directory exists, if not, create it
+if not os.path.exists(output_directory):
+    os.makedirs(output_directory)
+
+with open(file_directory+file_name+"_difficulty_skill.csv", "w") as f1: 
     write = csv.writer(f1)
-    write.writerow(["score", "count", "avg", "cumu"])
+    write.writerow(["skill", "difficulty", "score", "count", "avg", "cumu"])
     for key, dict in ordered_dict.items():
         sum_score = 0 
         sum_count = 0 
@@ -87,8 +96,8 @@ with open("outputs/stats/"+file_name+".csv", "w") as f1:
             sum_score += list[0]
             sum_count += list[1]
             if list[1] != 0:
-                write.writerow([str(list[0]), str(list[1]), str(list[0]/list[1]), str(sum_score/sum_count)])
+                write.writerow([key, level, str(list[0]), str(list[1]), str(list[0]/list[1]), str(sum_score/sum_count)])
             elif sum_count == 0: 
-                write.writerow([str(list[0]), str(list[1]), "N/A", "N/A"])
+                write.writerow([key, level, str(list[0]), str(list[1]), "N/A", "N/A"])
             else: 
-                write.writerow([str(list[0]), str(list[1]), "N/A", str(sum_score/sum_count)])
+                write.writerow([key, level, str(list[0]), str(list[1]), "N/A", str(sum_score/sum_count)])
