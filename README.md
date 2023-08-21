@@ -82,6 +82,7 @@ python aggregate_domain.py -m {output_review_file}
 We also provide the implementation of the process of automatic metadata annotation of FLASK. 
 
 ### Step 1. OpenAI API Information
+Since our model-based evaluation is based on GPT-4 evaluation, you need to add your OpenAI API key into the file of `openai_info/api_info.json` where you need to add your key in `api_keys` list. Note that we also support multiple keys for faster evaluation.
 
 ### Step 2. Domain Annotation
 For domain metadata annotation, run the following command:
@@ -91,7 +92,8 @@ cd metadata_annotation/domain
 python domain_annotation.py -o {output_domain_annotation} -e {output_domain_annotation_error} 
 ```
 
-We define 10 different domains revising the domain categorization of Wikipedia.
+We define 10 different domains revising the domain categorization of Wikipedia. Note that the error file exists for instances that fail due to rate limit of OpenAI API. If the error file is created after inference, you can rerun only the error instances.
+
 
 ### Step 3. Skillset Annotation
 For skillset annotation, run the following command:
