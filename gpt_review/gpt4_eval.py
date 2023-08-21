@@ -110,8 +110,6 @@ if __name__ == '__main__':
 
     requests = []
     for i in question_idx_list:
-        if i>2:
-            continue
         for row in answer_jsons:
             if row.get('question_id') == question_jsons[i]['question_id']:
                 answer_elem = row
