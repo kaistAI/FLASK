@@ -37,7 +37,7 @@ python inference.py --model-path {model_path} --model-id {model_id} --question-f
 
 We provide the inference results of various LLMs on `model_output/outputs` directory. Note that for the inference of FLASK-Hard, you can simply replace the `--question-file` argument to `../evaluation_set/flask_hard_evaluation.jsonl`.
 
-### Step3. Model Evaluation
+### Step 3. Model Evaluation
 After inference, we can evaluate the model using FLASK evaluation protocol. Run the following command for evaluation.
 
 ```
@@ -54,7 +54,7 @@ python gpt4_eval.py -q {output_error_file} -a {answer_file} -o {output_review_fi
 
 We provide the GPT-4 evaluation result of various models in `gpt_review/outputs` directory. 
 
-### Step4. Aggregation and Analysis
+### Step 4. Aggregation and Analysis
 After evaluation, FLASK enables fine-grained analysis depending on the skills, domains, and the difficulty levels. 
 
 For analyzing the performance for each `skill`, run the following command:
