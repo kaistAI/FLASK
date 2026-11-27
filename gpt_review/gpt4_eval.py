@@ -141,11 +141,11 @@ if __name__ == '__main__':
                             'role': 'user',
                             'content': prompt,
                         }
-                    ]
-                },
-                # setting temperature 0 for reproducibility
-                "temperature": 0,
-                "max_tokens": args.max_tokens
+                    ],
+                    # setting temperature 0 for reproducibility
+                    "temperature": 0,
+                    "max_tokens": args.max_tokens
+                }
             }
         )
 

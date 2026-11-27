@@ -123,10 +123,10 @@ if __name__ == '__main__':
                             'role': 'user',
                             'content': prompt,
                         }
-                    ]
-                },
-                "temperature": 0,
-                "max_tokens": args.max_tokens
+                    ],
+                    "temperature": 0,
+                    "max_tokens": args.max_tokens
+                }
             }
         )
 
