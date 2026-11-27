@@ -21,11 +21,6 @@ with open(file, 'r') as f:
     for line in f:
         review.append(json.loads(line))
 
-difficulty = []
-with open('../evaluation_set/flask_evaluation.jsonl', 'r') as f2:
-    for line in f2:
-        difficulty.append(json.loads(line))
-
 
 init = {
     "simple lifestyle knowledge":[0,0],
@@ -40,7 +35,11 @@ difficulty_dict = {}
 cnt=0
 for index, item in enumerate(review):
 
-    level = difficulty[index]["difficulty_labeled"]
+    # read the level from the review row itself: rows are sorted by id and may
+    # be missing (failed requests), so a positional lookup can pick the wrong
+    # question. The released gpt_review/outputs use "difficulty_labeled";
+    # reviews of evaluation_set/*.jsonl use "difficulty".
+    level = item["difficulty_labeled"] if "difficulty_labeled" in item else item["difficulty"]
     if len(item["score"])!=3:
         print("length issue!!!", item["score"], item )
     for key, score in item["score"].items():
