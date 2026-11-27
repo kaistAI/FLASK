@@ -35,7 +35,7 @@ cd model_output
 python inference.py --model-path {model_path} --model-id {model_id} --question-file ../input_data/flask_evaluation_raw.jsonl --answer-file {output_directory} --num-gpus {num_gpus}
 ```
 
-We provide the inference results of various LLMs on `model_output/outputs` directory. Note that for the inference of FLASK-Hard, you can simply replace the `--question-file` argument to `../evaluation_set/flask_hard_evaluation.jsonl`.
+We provide the inference results of various LLMs on `model_output/outputs` directory. Note that for the inference of FLASK-Hard, you can simply replace the `--question-file` argument to `../evaluation_set/flask_hard_evaluation.jsonl`. FLASK-Hard questions are numbered from 1, so evaluate them with an answer file generated from the same FLASK-Hard question file, not with the full-set answers in `model_output/outputs`.
 
 ### Step3. Model Evaluation
 After inference, we can evaluate the model using FLASK evaluation protocol. Run the following command for evaluation.

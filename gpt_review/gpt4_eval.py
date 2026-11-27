@@ -37,6 +37,19 @@ def parse_score(review, num):
         return {}
 
 
+def get_field(item, *keys):
+    # evaluation_set/*.jsonl uses idx/instruction/skill; earlier releases and
+    # error files written by older runs use question_id/text/metrics.
+    for key in keys:
+        if key in item:
+            return item[key]
+    raise KeyError(keys[0])
+
+
+def get_question_id(item):
+    return get_field(item, 'idx', 'question_id')
+
+
 def gen_prompt(reviewer_jsons, prompt_jsons, skills_jsons, response, item):
     reviewer_idx = 1
     prompt_id = reviewer_jsons[reviewer_idx]['prompt_id']
@@ -49,7 +62,7 @@ def gen_prompt(reviewer_jsons, prompt_jsons, skills_jsons, response, item):
 
     # skills =metrics
     skills = ""
-    metric_list = item["metrics"]
+    metric_list = get_field(item, "skill", "metrics")
     for label in metric_list:
         for skill in skills_jsons:
             if label in skill["Skill"]:
@@ -63,7 +76,7 @@ def gen_prompt(reviewer_jsons, prompt_jsons, skills_jsons, response, item):
                 skills+=f"\nScore 4: {scoring['4']}"
                 skills+=f"\nScore 5: {scoring['5']}\n\n"
                 break
-    prompt = prompt_template.format(question=item["text"], response=response, skills=skills, num=3, sample_answer=item["answer"], **defaults)
+    prompt = prompt_template.format(question=get_field(item, "instruction", "text"), response=response, skills=skills, num=3, sample_answer=item["answer"], **defaults)
     return sys_prompt, prompt
 
 
@@ -103,32 +116,33 @@ if __name__ == '__main__':
 
     handles = []
     review_jsons = []
-    total_len = len(question_jsons)
-    question_idx_list = list(range(total_len))
     question_copy = []
     answer_copy = []
+    answers_by_id = {}
+    for row in answer_jsons:
+        answers_by_id.setdefault(row.get('question_id'), row)
+    missing_ids = []
 
     requests = []
-    for i in question_idx_list:
-        for row in answer_jsons:
-            if row.get('question_id') == question_jsons[i]['question_id']:
-                answer_elem = row
-                break
-        answer_copy.append(answer_elem)
-        assert answer_copy[i]['question_id'] == question_jsons[i]['question_id']
-        question_copy.append(question_jsons[i])
-        sys_prompt, prompt = gen_prompt(reviewer_jsons, prompt_jsons, skills_jsons,answer_copy[i]["text"], question_jsons[i])
+    for question in question_jsons:
+        question_id = get_question_id(question)
+        if question_id not in answers_by_id:
+            missing_ids.append(question_id)
+            continue
+        answer_copy.append(answers_by_id[question_id])
+        question_copy.append(question)
+        sys_prompt, prompt = gen_prompt(reviewer_jsons, prompt_jsons, skills_jsons, answer_copy[-1]["text"], question)
         print(prompt)
         review_id = shortuuid.uuid()
         review_jsons.append({
             'review_id': review_id,
-            'question_id': question_jsons[i]['question_id'],
+            'question_id': question_id,
             'metadata': {},
         })
         requests.append(
             {
                 'review_id': review_id,
-                'question_id': question_jsons[i]['question_id'],
+                'question_id': question_id,
                 'metadata': {},
                 'request': {
                     "model": "gpt-4-0613",
@@ -148,6 +162,9 @@ if __name__ == '__main__':
                 "max_tokens": args.max_tokens
             }
         )
+
+    if missing_ids:
+        logger.warning(f'{len(missing_ids)} questions have no answer in {args.answer_file} and are skipped: {missing_ids}')
 
     openai_concurrent = OpenAIChatCompletionConcurrent(api_keys=key_jsons["api_keys"], requests_per_minute=60, expected_response_seconds=5)
     responses, fails = openai_concurrent.create_many(requests)
@@ -169,7 +186,7 @@ if __name__ == '__main__':
                 for idx, fail in enumerate(fails):
                     print("fail:", fail)
                     for index, item in enumerate(question_copy):
-                        if int(item.get("question_id")) == int(fail['question_id']):
+                        if int(get_question_id(item)) == int(fail['question_id']):
                             delete_elem_idx = index 
                     delete_index.append(delete_elem_idx)
                     output_error_file.write(json.dumps(question_copy[delete_elem_idx]) + '\n')
@@ -185,7 +202,7 @@ if __name__ == '__main__':
             scores = parse_score(review, num)
             review_jsons[idx] = question_copy[idx]
             for row in answer_jsons:
-                if row.get('question_id') == question_copy[idx]['question_id']:
+                if row.get('question_id') == get_question_id(question_copy[idx]):
                     review_jsons[idx]['target_txt'] = row["text"]
             review_jsons[idx]['review'] = review
             review_jsons[idx]['score'] = scores
@@ -194,14 +211,14 @@ if __name__ == '__main__':
                 output_review_file.write(json.dumps(review_jsons[idx]) + '\n')
             except Exception as e:
                 output_review_file.write('\n')
-                print(review_jsons[idx]['question_id'])
+                print(get_question_id(review_jsons[idx]))
         output_review_file.close()
 
     with open(f'{args.output_review_file}', 'r') as output_read_file:
         lines = output_read_file.readlines()
         output_read_file.close()
     json_objects = [json.loads(line) for line in lines]
-    sorted_objects = sorted(json_objects, key=lambda obj: obj.get('question_id'))
+    sorted_objects = sorted(json_objects, key=get_question_id)
 
     with open(f'{args.output_review_file}', 'w') as output_write_file:
         for obj in sorted_objects:
@@ -209,4 +226,4 @@ if __name__ == '__main__':
                 output_write_file.write(json.dumps(obj) + '\n')
             except Exception as e:
                 output_write_file.write('\n')
-                print(obj['question_id'])
+                print(get_question_id(obj))
