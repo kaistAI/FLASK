@@ -49,8 +49,9 @@ def get_model_answers(model_path, model_id, question_jsons):
     ans_jsons = []
     for i, line in enumerate(tqdm(question_jsons)):
         ques_json = json.loads(line)
-        idx = ques_json["question_id"]
-        qs = ques_json["text"]
+        # evaluation_set/*.jsonl uses idx/instruction; input_data/*_raw.jsonl uses question_id/text
+        idx = ques_json["idx"] if "idx" in ques_json else ques_json["question_id"]
+        qs = ques_json["instruction"] if "instruction" in ques_json else ques_json["text"]
         print("initial question", qs)
         conv = get_conversation_template(model_id)
         conv.append_message(conv.roles[0], qs)
