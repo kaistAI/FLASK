@@ -25,7 +25,10 @@ with open(file, 'r') as f:
 domain_dict = {}
 cnt=0
 for item in review:
-    for domain in item["domain_labeled"]:
+    # "domain_labeled" in the released gpt_review/outputs, "domain" in reviews of
+    # evaluation_set/*.jsonl (one released row also has a stray string "domain")
+    domains = item["domain_labeled"] if "domain_labeled" in item else item["domain"]
+    for domain in domains:
         if domain not in domain_dict.keys():
             domain_dict[domain]= [0,0]
         for key, score in item["score"].items():
